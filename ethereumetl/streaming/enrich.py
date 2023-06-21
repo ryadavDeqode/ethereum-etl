@@ -104,7 +104,9 @@ def enrich_logs(blocks, logs):
             'address',
             'data',
             'topics',
-            'block_number'
+            'block_number',
+            'to_address',
+            'from_address'
         ],
         [
             ('timestamp', 'block_timestamp'),

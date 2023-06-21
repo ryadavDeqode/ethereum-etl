@@ -51,6 +51,9 @@ class EthReceiptMapper(object):
         receipt.effective_gas_price = hex_to_dec(json_dict.get('effectiveGasPrice'))
 
         if 'logs' in json_dict:
+            for i in range(len(json_dict['logs'])):
+                json_dict['logs'][i]['to_address'] = json_dict['to']
+                json_dict['logs'][i]['from_address'] = json_dict['from']
             receipt.logs = [
                 self.receipt_log_mapper.json_dict_to_receipt_log(log) for log in json_dict['logs']
             ]
