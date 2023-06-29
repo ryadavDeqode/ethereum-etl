@@ -8,9 +8,12 @@ from ethereumetl.jobs.export_receipts_job import ExportReceiptsJob
 from ethereumetl.jobs.export_traces_job import ExportTracesJob
 from ethereumetl.jobs.extract_contracts_job import ExtractContractsJob
 from ethereumetl.jobs.extract_token_transfers_job import ExtractTokenTransfersJob
+from ethereumetl.jobs.extract_alfred_follow_unfollow import ExtractAlfredFollowUnfollowLogsJob
+from ethereumetl.jobs.extract_gmx_execute_limit_orders import ExtractGmxExecuteLimitOrdersJob
+from ethereumetl.jobs.extract_gmx_execute_market_orders import ExtractGmxExecuteMarketOrdersJob
 from ethereumetl.jobs.extract_tokens_job import ExtractTokensJob
 from ethereumetl.streaming.enrich import enrich_transactions, enrich_logs, enrich_token_transfers, enrich_traces, \
-    enrich_contracts, enrich_tokens
+    enrich_contracts, enrich_tokens, enrich_alfred_follow_unfollow_logs, enrich_gmx_execute_limit_orders_logs,enrich_gmx_execute_market_orders_logs
 from ethereumetl.streaming.eth_item_id_calculator import EthItemIdCalculator
 from ethereumetl.streaming.eth_item_timestamp_calculator import EthItemTimestampCalculator
 from ethereumetl.thread_local_proxy import ThreadLocalProxy
@@ -44,7 +47,8 @@ class EthStreamerAdapter:
         # Export blocks and transactions
         blocks, transactions = [], []
         if self._should_export(EntityType.BLOCK) or self._should_export(EntityType.TRANSACTION):
-            blocks, transactions = self._export_blocks_and_transactions(start_block, end_block)
+            blocks, transactions = self._export_blocks_and_transactions(
+                start_block, end_block)
 
         # Export receipts and logs
         receipts, logs = [], []
@@ -55,6 +59,16 @@ class EthStreamerAdapter:
         token_transfers = []
         if self._should_export(EntityType.TOKEN_TRANSFER):
             token_transfers = self._extract_token_transfers(logs)
+
+        # Extract follow logs
+        alfred_follow_logs = []
+        if self._should_export(EntityType.ALFRED_FOLLOW_LOGS):
+            alfred_follow_logs = self._extract_alfred_follow_logs(logs)
+        
+        # Extract follow logs
+        gmx_execute_limit_orders_logs = []
+        if self._should_export(EntityType.ALFRED_FOLLOW_LOGS):
+            gmx_execute_limit_orders_logs = self._extract_alfred_follow_logs(logs)
 
         # Export traces
         traces = []
@@ -85,6 +99,8 @@ class EthStreamerAdapter:
             if EntityType.CONTRACT in self.entity_types else []
         enriched_tokens = enrich_tokens(blocks, tokens) \
             if EntityType.TOKEN in self.entity_types else []
+        enriched_alfred_follow_logs = enrich_alfred_follow_unfollow_logs(blocks, alfred_follow_logs) \
+            if EntityType.ALFRED_FOLLOW_LOGS in self.entity_types else []
 
         logging.info('Exporting with ' + type(self.item_exporter).__name__)
 
@@ -95,7 +111,8 @@ class EthStreamerAdapter:
             sort_by(enriched_token_transfers, ('block_number', 'log_index')) + \
             sort_by(enriched_traces, ('block_number', 'trace_index')) + \
             sort_by(enriched_contracts, ('block_number',)) + \
-            sort_by(enriched_tokens, ('block_number',))
+            sort_by(enriched_tokens, ('block_number',)) + \
+            sort_by(enriched_alfred_follow_logs, ('block_number', 'log_index'))
 
         self.calculate_item_ids(all_items)
         self.calculate_item_timestamps(all_items)
@@ -103,7 +120,8 @@ class EthStreamerAdapter:
         self.item_exporter.export_items(all_items)
 
     def _export_blocks_and_transactions(self, start_block, end_block):
-        blocks_and_transactions_item_exporter = InMemoryItemExporter(item_types=['block', 'transaction'])
+        blocks_and_transactions_item_exporter = InMemoryItemExporter(
+            item_types=['block', 'transaction'])
         blocks_and_transactions_job = ExportBlocksJob(
             start_block=start_block,
             end_block=end_block,
@@ -116,13 +134,15 @@ class EthStreamerAdapter:
         )
         blocks_and_transactions_job.run()
         blocks = blocks_and_transactions_item_exporter.get_items('block')
-        transactions = blocks_and_transactions_item_exporter.get_items('transaction')
+        transactions = blocks_and_transactions_item_exporter.get_items(
+            'transaction')
         return blocks, transactions
 
     def _export_receipts_and_logs(self, transactions):
         exporter = InMemoryItemExporter(item_types=['receipt', 'log'])
         job = ExportReceiptsJob(
-            transaction_hashes_iterable=(transaction['hash'] for transaction in transactions),
+            transaction_hashes_iterable=(
+                transaction['hash'] for transaction in transactions),
             batch_size=self.batch_size,
             batch_web3_provider=self.batch_web3_provider,
             max_workers=self.max_workers,
@@ -146,13 +166,47 @@ class EthStreamerAdapter:
         token_transfers = exporter.get_items('token_transfer')
         return token_transfers
 
+    def _extract_alfred_follow_logs(self, logs):
+        exporter = InMemoryItemExporter(item_types=['alfred_follow_unfollow_logs'])
+        job = ExtractAlfredFollowUnfollowLogsJob(
+            logs_iterable=logs,
+            batch_size=self.batch_size,
+            max_workers=self.max_workers,
+            item_exporter=exporter)
+        job.run()
+        alfred_follow_logs = exporter.get_items('alfred_follow_unfollow_logs')
+        return alfred_follow_logs
+
+    def _extract_gmx_execute_limit_orders_logs(self, logs):
+        exporter = InMemoryItemExporter(item_types=['gmx_execute_limit_orders_logs'])
+        job = ExtractGmxExecuteLimitOrdersJob(
+            logs_iterable=logs,
+            batch_size=self.batch_size,
+            max_workers=self.max_workers,
+            item_exporter=exporter)
+        job.run()
+        gmx_execute_limit_orders_logs = exporter.get_items('gmx_execute_limit_orders_logs')
+        return gmx_execute_limit_orders_logs
+    
+    def _extract_gmx_execute_market_orders_logs(self, logs):
+        exporter = InMemoryItemExporter(item_types=['gmx_execute_market_orders_logs'])
+        job = ExtractGmxExecuteMarketOrdersJob(
+            logs_iterable=logs,
+            batch_size=self.batch_size,
+            max_workers=self.max_workers,
+            item_exporter=exporter)
+        job.run()
+        gmx_execute_market_orders_logs = exporter.get_items('gmx_execute_market_orders_logs')
+        return gmx_execute_market_orders_logs
+
     def _export_traces(self, start_block, end_block):
         exporter = InMemoryItemExporter(item_types=['trace'])
         job = ExportTracesJob(
             start_block=start_block,
             end_block=end_block,
             batch_size=self.batch_size,
-            web3=ThreadLocalProxy(lambda: build_web3(self.batch_web3_provider)),
+            web3=ThreadLocalProxy(
+                lambda: build_web3(self.batch_web3_provider)),
             max_workers=self.max_workers,
             item_exporter=exporter
         )
@@ -176,7 +230,8 @@ class EthStreamerAdapter:
         exporter = InMemoryItemExporter(item_types=['token'])
         job = ExtractTokensJob(
             contracts_iterable=contracts,
-            web3=ThreadLocalProxy(lambda: build_web3(self.batch_web3_provider)),
+            web3=ThreadLocalProxy(
+                lambda: build_web3(self.batch_web3_provider)),
             max_workers=self.max_workers,
             item_exporter=exporter
         )
@@ -209,6 +264,15 @@ class EthStreamerAdapter:
         if entity_type == EntityType.TOKEN:
             return EntityType.TOKEN in self.entity_types
 
+        if entity_type == EntityType.ALFRED_FOLLOW_UNFOLLOW_LOGS:
+            return EntityType.ALFRED_FOLLOW_UNFOLLOW_LOGS in self.entity_types
+
+        if entity_type == EntityType.GMX_EXECUTE_LIMIT_ORDERS_LOGS:
+            return EntityType.GMX_EXECUTE_LIMIT_ORDERS_LOGS in self.entity_types
+        
+        if entity_type == EntityType.GMX_EXECUTE_MARKET_ORDERS_LOGS:
+            return EntityType.GMX_EXECUTE_MARKET_ORDERS_LOGS in self.entity_types
+
         raise ValueError('Unexpected entity type ' + entity_type)
 
     def calculate_item_ids(self, items):
@@ -217,7 +281,8 @@ class EthStreamerAdapter:
 
     def calculate_item_timestamps(self, items):
         for item in items:
-            item['item_timestamp'] = self.item_timestamp_calculator.calculate(item)
+            item['item_timestamp'] = self.item_timestamp_calculator.calculate(
+                item)
 
     def close(self):
         self.item_exporter.close()

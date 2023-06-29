@@ -199,6 +199,71 @@ def enrich_contracts(blocks, contracts):
 
     return result
 
+def enrich_alfred_follow_unfollow_logs(blocks, token_transfers):
+    result = list(join(
+        token_transfers, blocks, ('block_number', 'number'),
+        [
+            'type',
+            'address',
+            'topics',
+            'data',
+            'transaction_hash',
+            'log_index',
+            'block_number'
+        ],
+        [
+            ('timestamp', 'block_timestamp'),
+            ('hash', 'block_hash'),
+        ]))
+
+    if len(result) != len(token_transfers):
+        raise ValueError('The number of token transfers is wrong ' + str(result))
+
+    return result
+
+def enrich_gmx_execute_limit_orders_logs(blocks, token_transfers):
+    result = list(join(
+        token_transfers, blocks, ('block_number', 'number'),
+        [
+            'type',
+            'address',
+            'topics',
+            'data',
+            'transaction_hash',
+            'log_index',
+            'block_number'
+        ],
+        [
+            ('timestamp', 'block_timestamp'),
+            ('hash', 'block_hash'),
+        ]))
+
+    if len(result) != len(token_transfers):
+        raise ValueError('The number of token transfers is wrong ' + str(result))
+
+    return result
+
+def enrich_gmx_execute_market_orders_logs(blocks, token_transfers):
+    result = list(join(
+        token_transfers, blocks, ('block_number', 'number'),
+        [
+            'type',
+            'address',
+            'topics',
+            'data',
+            'transaction_hash',
+            'log_index',
+            'block_number'
+        ],
+        [
+            ('timestamp', 'block_timestamp'),
+            ('hash', 'block_hash'),
+        ]))
+
+    if len(result) != len(token_transfers):
+        raise ValueError('The number of token transfers is wrong ' + str(result))
+
+    return result
 
 def enrich_tokens(blocks, tokens):
     result = list(join(
