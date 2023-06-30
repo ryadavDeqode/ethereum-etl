@@ -45,6 +45,8 @@ class AlfredFollowLogsExtractor(object):
             filtered_logs.transaction_hash = receipt_log.transaction_hash
             filtered_logs.log_index = receipt_log.log_index
             filtered_logs.block_number = receipt_log.block_number
+            filtered_logs.to_address = receipt_log.to_address
+            filtered_logs.from_address = receipt_log.from_address
             return filtered_logs
         return None
 

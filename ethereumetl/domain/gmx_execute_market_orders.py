@@ -31,3 +31,5 @@ class GmxExecuteMarketOrdersLogs(object):
         self.address = None
         self.data = None
         self.topics = []
+        self.to_address = None
+        self.from_address = None

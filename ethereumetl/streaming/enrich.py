@@ -104,7 +104,9 @@ def enrich_logs(blocks, logs):
             'address',
             'data',
             'topics',
-            'block_number'
+            'block_number',
+            'to_address',
+            'from_address'
         ],
         [
             ('timestamp', 'block_timestamp'),
@@ -209,7 +211,9 @@ def enrich_alfred_follow_unfollow_logs(blocks, token_transfers):
             'data',
             'transaction_hash',
             'log_index',
-            'block_number'
+            'block_number',
+            'to_address',
+            'from_address'
         ],
         [
             ('timestamp', 'block_timestamp'),
@@ -231,7 +235,9 @@ def enrich_gmx_execute_limit_orders_logs(blocks, token_transfers):
             'data',
             'transaction_hash',
             'log_index',
-            'block_number'
+            'block_number',
+            'to_address',
+            'from_address'
         ],
         [
             ('timestamp', 'block_timestamp'),
@@ -253,7 +259,9 @@ def enrich_gmx_execute_market_orders_logs(blocks, token_transfers):
             'data',
             'transaction_hash',
             'log_index',
-            'block_number'
+            'block_number',
+            'to_address',
+            'from_address'
         ],
         [
             ('timestamp', 'block_timestamp'),

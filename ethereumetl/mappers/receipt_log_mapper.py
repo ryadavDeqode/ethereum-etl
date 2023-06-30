@@ -38,7 +38,8 @@ class EthReceiptLogMapper(object):
         receipt_log.address = json_dict.get('address')
         receipt_log.data = json_dict.get('data')
         receipt_log.topics = json_dict.get('topics')
-
+        receipt_log.to_address = json_dict.get('to_address')
+        receipt_log.from_address = json_dict.get('from_address')
         return receipt_log
 
     def web3_dict_to_receipt_log(self, dict):
@@ -60,6 +61,8 @@ class EthReceiptLogMapper(object):
         receipt_log.block_number = dict.get('blockNumber')
         receipt_log.address = dict.get('address')
         receipt_log.data = dict.get('data')
+        receipt_log.to_address = dict.get('to')
+        receipt_log.from_address = dict.get('from')
 
         if 'topics' in dict:
             receipt_log.topics = [topic.hex() for topic in dict['topics']]
@@ -76,7 +79,9 @@ class EthReceiptLogMapper(object):
             'block_number': receipt_log.block_number,
             'address': receipt_log.address,
             'data': receipt_log.data,
-            'topics': receipt_log.topics
+            'topics': receipt_log.topics,
+            'to_address': receipt_log.to_address,
+            'from_address': receipt_log.from_address,
         }
 
     def dict_to_receipt_log(self, dict):
@@ -89,6 +94,8 @@ class EthReceiptLogMapper(object):
         receipt_log.block_number = dict.get('block_number')
         receipt_log.address = dict.get('address')
         receipt_log.data = dict.get('data')
+        receipt_log.to_address = dict.get('to_address')
+        receipt_log.from_address = dict.get('from_address')
 
         topics = dict.get('topics')
         if isinstance(topics, str):
