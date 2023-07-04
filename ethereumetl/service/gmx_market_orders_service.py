@@ -43,7 +43,7 @@ class FilteredLogsExtractor(object):
             filtered_logs = GmxExecuteMarketOrdersLogs()
             filtered_logs.address = to_normalized_address(receipt_log.address)
             filtered_logs.topics = receipt_log.topics
-            filtered_logs.data = split_to_words(receipt_log.data)
+            filtered_logs.data = receipt_log.data
             filtered_logs.transaction_hash = receipt_log.transaction_hash
             filtered_logs.log_index = receipt_log.log_index
             filtered_logs.block_number = receipt_log.block_number
