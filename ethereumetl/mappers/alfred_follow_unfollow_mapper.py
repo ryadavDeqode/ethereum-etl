@@ -33,4 +33,5 @@ class AlfredFollowUnfollowMapper(object):
             'block_number': token_transfer.block_number,
             'to_address': token_transfer.to_address,
             'from_address': token_transfer.from_address,
+            'transaction_index': token_transfer.transaction_index
         }

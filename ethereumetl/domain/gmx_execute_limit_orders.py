@@ -33,3 +33,4 @@ class GmxExecuteLimitOrdersLogs(object):
         self.topics = []
         self.to_address = None
         self.from_address = None
+        self.transaction_index = None

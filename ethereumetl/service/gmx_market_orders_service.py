@@ -28,8 +28,8 @@ from ethereumetl.domain.gmx_execute_market_orders import GmxExecuteMarketOrdersL
 from ethereumetl.utils import chunk_string, hex_to_dec, to_normalized_address
 
 # https://ethereum.stackexchange.com/questions/12553/understanding-logs-and-log-blooms
-TOPICS_TO_LISTEN = ['0x21435c5b618d77ff3657140cd3318e2cffaebc5e0e1b7318f56a9ba4044c3ed2', # alfred_follow_event
-                    '0x1be316b94d38c07bd41cdb4913772d0a0a82802786a2f8b657b6e85dbcdfc641', # alfred_unfollow_event
+TOPICS_TO_LISTEN = ['0x21435c5b618d77ff3657140cd3318e2cffaebc5e0e1b7318f56a9ba4044c3ed2', 
+                    '0x1be316b94d38c07bd41cdb4913772d0a0a82802786a2f8b657b6e85dbcdfc641',
 ]
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ class FilteredLogsExtractor(object):
             filtered_logs.block_number = receipt_log.block_number
             filtered_logs.to_address = receipt_log.to_address
             filtered_logs.from_address = receipt_log.from_address
+            filtered_logs.transaction_index = receipt_log.transaction_index
             return filtered_logs
         return None
 

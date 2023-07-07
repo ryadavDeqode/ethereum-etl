@@ -49,6 +49,7 @@ class ExtractGmxLimitOrdersLogsJob(object):
             filtered_logs.block_number = receipt_log.block_number
             filtered_logs.to_address = receipt_log.to_address
             filtered_logs.from_address = receipt_log.from_address
+            filtered_logs.transaction_index = receipt_log.transaction_index
             return filtered_logs
         return None
 
