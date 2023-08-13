@@ -76,6 +76,8 @@ def rpc_response_batch_to_results(response):
 
 
 def rpc_response_to_result(response):
+    if isinstance(response, str):
+        return None  # Skip yielding if result is a string
     result = response.get('result')
     if result is None:
         error_message = 'result is None in response {}.'.format(response)
@@ -87,11 +89,7 @@ def rpc_response_to_result(response):
         elif response.get('error') is not None and is_retriable_error(response.get('error').get('code')):
             raise RetriableValueError(error_message)
         raise ValueError(error_message)
-
-    if isinstance(result, str):
-        return None  # Skip yielding if result is a string
-    else:
-        return result
+    return result
 
 
 def is_retriable_error(error_code):
