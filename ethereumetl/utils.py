@@ -23,6 +23,7 @@
 
 import itertools
 import warnings
+import time
 
 from ethereumetl.misc.retriable_value_error import RetriableValueError
 
@@ -68,7 +69,10 @@ def validate_range(range_start_incl, range_end_incl):
 
 def rpc_response_batch_to_results(response):
     for response_item in response:
-        yield rpc_response_to_result(response_item)
+        result = rpc_response_to_result(response_item)
+        if result is not None:
+            yield result
+
 
 
 def rpc_response_to_result(response):
@@ -83,7 +87,11 @@ def rpc_response_to_result(response):
         elif response.get('error') is not None and is_retriable_error(response.get('error').get('code')):
             raise RetriableValueError(error_message)
         raise ValueError(error_message)
-    return result
+
+    if isinstance(result, str):
+        return None  # Skip yielding if result is a string
+    else:
+        return result
 
 
 def is_retriable_error(error_code):
